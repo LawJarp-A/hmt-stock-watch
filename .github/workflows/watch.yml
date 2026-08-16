@@ -32,5 +32,13 @@ jobs:
           git config user.name  "hmt-watch-bot"
           git config user.email "actions@github.com"
           git add -A state.json docs/
-          git diff --staged --quiet || git commit -m "state: $(date -u +%H:%MZ) [skip ci]"
-          git push
+          git diff --staged --quiet && exit 0
+          git commit -m "state: $(date -u +%H:%MZ) [skip ci]"
+          # discover.yml may have pushed since checkout. Rebase rather than fail:
+          # a failed push would drop this run's state, and the next run would
+          # re-detect the same transition and alert twice.
+          for i in 1 2 3; do
+            git pull --rebase --autostash -q && git push && exit 0
+            sleep 5
+          done
+          exit 1

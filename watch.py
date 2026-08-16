@@ -159,16 +159,23 @@ def discover() -> list:
     """
     uuids = sorted(set(re.findall(r"/product/([0-9a-f-]{36})", fetch("https://www.hmtwatches.store/sitemap.xml"))))
     print(f"sitemap: {len(uuids)} products")
-    found = []
+    found, errors = [], []
     for n, u in enumerate(uuids, 1):
         try:
             s = parse_stock(fetch(PRODUCT_URL.format(u)), u)
-        except Exception:
+        except Exception as e:
+            errors.append(f"{u}: {e}")
             continue
         if s.name and WANTED.search(s.name):
             found.append({"id": u, "name": s.name})
             print(f"  [{n}/{len(uuids)}] {s.name}")
         time.sleep(random.uniform(0.3, 0.8))
+    # Unreadable pages are silently skipped -- if a Janata variant is among them
+    # it never gets watched. Say so loudly rather than reporting a clean run.
+    if errors:
+        print(f"\n{len(errors)} of {len(uuids)} pages unreadable (a wanted watch could be hiding here):", file=sys.stderr)
+        for e in errors[:10]:
+            print(f"  {e}", file=sys.stderr)
     return found
 
 
