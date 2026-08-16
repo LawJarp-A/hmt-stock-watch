@@ -1,21 +1,61 @@
 {
   "2c249e81-28b0-4a24-b724-24a4b70e8a16": {
-    "checked": 1786880658.58703,
+    "checked": 1786881204.5398517,
     "fails": 0,
     "last_notified": 0,
     "mrp": 2499,
     "name": "HMT Men's Gandaberunda JGSL 01",
     "status": "out_of_stock"
   },
+  "30ec5a02-6400-4fba-a7c3-34ddfe5d6852": {
+    "checked": 1786881208.6305058,
+    "fails": 0,
+    "last_notified": 0,
+    "mrp": 2499,
+    "name": "HMT Women's Gandaberunda JLGL 01 White",
+    "status": "out_of_stock"
+  },
   "44333eb5-32ae-4189-85ab-209a8a451249": {
-    "checked": 1786880657.3648195,
+    "checked": 1786881213.0052016,
     "fails": 0,
     "last_notified": 0,
     "mrp": 14750,
     "name": "HMT Janata Automatic White",
     "status": "out_of_stock"
   },
+  "49f584fe-1a94-4c30-bea0-845b1fa70699": {
+    "checked": 1786881216.992506,
+    "fails": 0,
+    "last_notified": 0,
+    "mrp": 2499,
+    "name": "HMT Women's Gandaberunda JLSS 01 White",
+    "status": "out_of_stock"
+  },
+  "4e9888f6-fd77-472c-af5a-f93ce6394d44": {
+    "checked": 1786881219.3773842,
+    "fails": 0,
+    "last_notified": 0,
+    "mrp": 2599,
+    "name": "HMT Men's Gandaberunda JGSS 01",
+    "status": "out_of_stock"
+  },
+  "50782856-6a30-4182-98c5-845fcab258d3": {
+    "checked": 1786881223.031315,
+    "fails": 0,
+    "last_notified": 0,
+    "mrp": 2599,
+    "name": "HMT Women's Gandaberunda JLGG - 01 White",
+    "status": "out_of_stock"
+  },
   "_meta": {
     "heartbeat": "2026-08-16"
+  },
+  "a710e258-76bb-4743-b04f-7bb4903f4706": {
+    "checked": 1786881225.558113,
+    "fails": 0,
+    "last_notified": 0,
+    "mrp": 2599,
+    "name": "HMT Men's Gandaberunda JGGL 01 White",
+    "status": "out_of_stock"
   }
 }
