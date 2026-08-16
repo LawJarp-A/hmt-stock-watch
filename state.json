@@ -1,0 +1,21 @@
+{
+  "2c249e81-28b0-4a24-b724-24a4b70e8a16": {
+    "checked": 1786879340.1695342,
+    "fails": 0,
+    "last_notified": 0,
+    "mrp": 2499,
+    "name": "HMT Men's Gandaberunda JGSL 01",
+    "status": "out_of_stock"
+  },
+  "44333eb5-32ae-4189-85ab-209a8a451249": {
+    "checked": 1786879335.584019,
+    "fails": 0,
+    "last_notified": 0,
+    "mrp": 14750,
+    "name": "HMT Janata Automatic White",
+    "status": "out_of_stock"
+  },
+  "_meta": {
+    "heartbeat": "2026-08-16"
+  }
+}
