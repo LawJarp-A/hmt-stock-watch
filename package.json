@@ -1,0 +1,10 @@
+{
+  "name": "hmt-stock-watch",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test cloudflare/*.test.js",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  }
+}

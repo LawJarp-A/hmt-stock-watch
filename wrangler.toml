@@ -1,0 +1,19 @@
+name = "hmt-watch"
+main = "cloudflare/worker.js"
+compatibility_date = "2026-08-16"
+
+# Lets the Worker import page_template.html as a string, so the status page has
+# exactly one source of truth shared with the Python renderer.
+rules = [{ type = "Text", globs = ["**/*.html"] }]
+
+[triggers]
+# Cloudflare cron actually fires every minute, unlike GitHub's best-effort
+# scheduler which drifted 5-20 min. That is the entire reason we moved here.
+crons = ["* * * * *"]
+
+[[kv_namespaces]]
+binding = "STATE"
+id = "PLACEHOLDER"
+
+[observability]
+enabled = true
