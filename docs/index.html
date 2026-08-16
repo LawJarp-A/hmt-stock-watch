@@ -91,6 +91,9 @@
     font-family:'IBM Plex Mono',monospace; font-size:.72rem; color:var(--ink-soft);
   }
   .price{font-family:Archivo,sans-serif;font-size:1.5rem;font-weight:600;color:var(--ink)}
+  /* A stale check must look wrong, not merely read wrong. */
+  .stale{color:var(--oxide);font-weight:500}
+  .stale::after{content:" — monitor may be stuck"}
   .buy{
     display:inline-block; margin-top:1.1rem; padding:.62rem 1.15rem; border-radius:1px;
     font-family:'IBM Plex Mono',monospace; font-size:.72rem; letter-spacing:.16em;
@@ -123,15 +126,36 @@
     an alert with a buy link — you don't need to keep this page open.
   </p>
 
-  <article class="plate"><div class="ref">Ref. 44333eb5</div><h2 class="name">HMT Janata Automatic White</h2><div class="state out"><b></b>Out of stock</div><div class="price">₹14,750</div><div class="meta"><span>Checked 12 min ago</span></div><a class="buy" href="https://www.hmtwatches.store/product/44333eb5-32ae-4189-85ab-209a8a451249">View on HMT &rarr;</a></article>
-<article class="plate"><div class="ref">Ref. 2c249e81</div><h2 class="name">HMT Men's Gandaberunda JGSL 01</h2><div class="kn">ಗಂಡಭೇರುಂಡ</div><div class="state out"><b></b>Out of stock</div><div class="price">₹2,499</div><div class="meta"><span>Checked 12 min ago</span></div><a class="buy" href="https://www.hmtwatches.store/product/2c249e81-28b0-4a24-b724-24a4b70e8a16">View on HMT &rarr;</a></article>
+  <article class="plate"><div class="ref">Ref. 44333eb5</div><h2 class="name">HMT Janata Automatic White</h2><div class="state out"><b></b>Out of stock</div><div class="price">₹14,750</div><div class="meta"><span data-checked="1786879335.584019">Checked 21 min ago</span></div><a class="buy" href="https://www.hmtwatches.store/product/44333eb5-32ae-4189-85ab-209a8a451249">View on HMT &rarr;</a></article>
+<article class="plate"><div class="ref">Ref. 2c249e81</div><h2 class="name">HMT Men's Gandaberunda JGSL 01</h2><div class="kn">ಗಂಡಭೇರುಂಡ</div><div class="state out"><b></b>Out of stock</div><div class="price">₹2,499</div><div class="meta"><span data-checked="1786879340.1695342">Checked 21 min ago</span></div><a class="buy" href="https://www.hmtwatches.store/product/2c249e81-28b0-4a24-b724-24a4b70e8a16">View on HMT &rarr;</a></article>
 
   <footer>
-    Last checked 16 Aug, 17:04 IST<br>
+    Last checked 16 Aug, 17:13 IST<br>
     Alerts go to your phone via ntfy. A quiet daily heartbeat confirms this is still
     running, so nothing here means nothing has changed.<br>
     <a href="https://github.com/LawJarp-A/hmt-stock-watch">Source</a>
   </footer>
 </div>
+<script>
+  // "Checked X ago" must be computed in the reader's browser, not baked in at
+  // build time -- a static page would otherwise show a frozen number that gets
+  // quietly more wrong the longer it sits. If this page is stale, say so.
+  function ago(s){
+    if(s<90) return "just now";
+    var m=Math.round(s/60);
+    if(m<90) return m+" min ago";
+    var h=Math.round(m/60);
+    return h<36 ? h+" h ago" : Math.round(h/24)+" days ago";
+  }
+  function refresh(){
+    var now=Date.now()/1000;
+    document.querySelectorAll("[data-checked]").forEach(function(el){
+      var age=now-parseFloat(el.dataset.checked);
+      el.textContent="Checked "+ago(age);
+      el.classList.toggle("stale", age>2700);   // 45 min: something is wrong
+    });
+  }
+  refresh(); setInterval(refresh,30000);
+</script>
 </body>
 </html>

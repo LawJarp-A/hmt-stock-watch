@@ -199,7 +199,7 @@ def dashboard(state: dict) -> None:
             f'<h2 class="name">{s.get("name", "Unknown")}</h2>{kn}'
             f'<div class="state {cls}"><b></b>{label}</div>'
             f'<div class="price">₹{s.get("mrp", 0):,}</div>'
-            f'<div class="meta"><span>Checked {ago(s.get("checked", 0))}</span></div>'
+            f'<div class="meta"><span data-checked="{s.get("checked", 0)}">Checked {ago(s.get("checked", 0))}</span></div>'
             f'<a class="buy" href="{PRODUCT_URL.format(k)}">{"Buy now" if live else "View on HMT"} &rarr;</a>'
             "</article>")
     # The headline answers the question you opened the page to ask, not the count.

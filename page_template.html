@@ -91,6 +91,9 @@
     font-family:'IBM Plex Mono',monospace; font-size:.72rem; color:var(--ink-soft);
   }
   .price{font-family:Archivo,sans-serif;font-size:1.5rem;font-weight:600;color:var(--ink)}
+  /* A stale check must look wrong, not merely read wrong. */
+  .stale{color:var(--oxide);font-weight:500}
+  .stale::after{content:" — monitor may be stuck"}
   .buy{
     display:inline-block; margin-top:1.1rem; padding:.62rem 1.15rem; border-radius:1px;
     font-family:'IBM Plex Mono',monospace; font-size:.72rem; letter-spacing:.16em;
@@ -132,5 +135,26 @@
     <a href="https://github.com/LawJarp-A/hmt-stock-watch">Source</a>
   </footer>
 </div>
+<script>
+  // "Checked X ago" must be computed in the reader's browser, not baked in at
+  // build time -- a static page would otherwise show a frozen number that gets
+  // quietly more wrong the longer it sits. If this page is stale, say so.
+  function ago(s){
+    if(s<90) return "just now";
+    var m=Math.round(s/60);
+    if(m<90) return m+" min ago";
+    var h=Math.round(m/60);
+    return h<36 ? h+" h ago" : Math.round(h/24)+" days ago";
+  }
+  function refresh(){
+    var now=Date.now()/1000;
+    document.querySelectorAll("[data-checked]").forEach(function(el){
+      var age=now-parseFloat(el.dataset.checked);
+      el.textContent="Checked "+ago(age);
+      el.classList.toggle("stale", age>2700);   // 45 min: something is wrong
+    });
+  }
+  refresh(); setInterval(refresh,30000);
+</script>
 </body>
 </html>
