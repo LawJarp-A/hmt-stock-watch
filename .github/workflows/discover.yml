@@ -1,0 +1,27 @@
+name: discover
+
+# Weekly re-crawl of sitemap.xml so newly listed Janata / Gandaberunda variants
+# get picked up. Also keeps the repo active -- GitHub disables scheduled
+# workflows after 60 days of inactivity, which would silently kill the monitor.
+
+on:
+  schedule:
+    - cron: '0 2 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 watch.py --discover
+      - name: Commit product list
+        run: |
+          git config user.name  "hmt-watch-bot"
+          git config user.email "actions@github.com"
+          git add -A products.json
+          git diff --staged --quiet || git commit -m "discover: refresh watch list [skip ci]"
+          git push

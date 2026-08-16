@@ -1,0 +1,36 @@
+name: watch
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'    # hot: the 2 watches Prajwal wants
+    - cron: '7,37 * * * *'   # sweep: every Janata + Gandaberunda variant
+  workflow_dispatch:
+    inputs:
+      tier:
+        description: hot or all
+        default: hot
+
+permissions:
+  contents: write
+
+concurrency:
+  group: watch
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check stock
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: |
+          python3 watch.py --tier "${{ inputs.tier || (github.event.schedule == '7,37 * * * *' && 'all' || 'hot') }}"
+      - name: Commit state
+        run: |
+          git config user.name  "hmt-watch-bot"
+          git config user.email "actions@github.com"
+          git add -A state.json docs/
+          git diff --staged --quiet || git commit -m "state: $(date -u +%H:%MZ) [skip ci]"
+          git push
