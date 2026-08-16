@@ -4,7 +4,7 @@
 Standard library only, on purpose: no pip install in CI, nothing to break.
 Read the trap comments in parse_stock() before changing it.
 """
-import argparse, json, os, pathlib, random, re, sys, time, urllib.request
+import argparse, gzip, json, os, pathlib, random, re, sys, time, urllib.request
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
@@ -73,12 +73,20 @@ def parse_stock(html: str, uuid: str) -> Stock:
 
 
 def fetch(url: str, tries: int = 3) -> str:
-    """The store 403s without a browser User-Agent."""
+    """The store 403s without a browser User-Agent.
+
+    We ask for gzip: pages are ~500KB raw but ~70KB compressed. Same data, a
+    fraction of the bandwidth off someone else's servers.
+    """
     for n in range(tries):
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept-Language": "en-IN,en;q=0.9"})
+            req = urllib.request.Request(url, headers={
+                "User-Agent": UA, "Accept-Language": "en-IN,en;q=0.9", "Accept-Encoding": "gzip"})
             with urllib.request.urlopen(req, timeout=20) as r:
-                return r.read().decode("utf-8", "ignore")
+                raw = r.read()
+                if r.headers.get("Content-Encoding") == "gzip":
+                    raw = gzip.decompress(raw)
+                return raw.decode("utf-8", "ignore")
         except Exception:
             if n == tries - 1:
                 raise
@@ -164,20 +172,41 @@ def discover() -> list:
     return found
 
 
+def ago(ts: float) -> str:
+    m = int((time.time() - ts) / 60)
+    return "just now" if m < 1 else f"{m} min ago" if m < 90 else f"{m // 60} h ago"
+
+
 def dashboard(state: dict) -> None:
-    rows = "".join(
-        f'<tr class="{s.get("status")}"><td>{s.get("name","?")}</td><td>Rs.{s.get("mrp","?")}</td>'
-        f'<td>{"IN STOCK" if s.get("status")=="in_stock" else "out of stock"}</td>'
-        f'<td><a href="{PRODUCT_URL.format(k)}">open</a></td></tr>'
-        for k, s in sorted(state.items(), key=lambda x: x[0]) if k != "_meta")
+    """Render docs/index.html from page_template.html."""
+    plates = []
+    for k, s in sorted(state.items(), key=lambda x: (x[1].get("status") != "in_stock", x[1].get("name", ""))):
+        if k == "_meta":
+            continue
+        live = s.get("status") == "in_stock"
+        cls, label = ("in", "In stock") if live else (("down", "Check failed") if s.get("fails") else ("out", "Out of stock"))
+        kn = '<div class="kn">ಗಂಡಭೇರುಂಡ</div>' if "gandaberunda" in (s.get("name") or "").lower() else ""
+        plates.append(
+            f'<article class="plate{" instock" if live else ""}">'
+            f'<div class="ref">Ref. {k[:8]}</div>'
+            f'<h2 class="name">{s.get("name", "Unknown")}</h2>{kn}'
+            f'<div class="state {cls}"><b></b>{label}</div>'
+            f'<div class="price">₹{s.get("mrp", 0):,}</div>'
+            f'<div class="meta"><span>Checked {ago(s.get("checked", 0))}</span></div>'
+            f'<a class="buy" href="{PRODUCT_URL.format(k)}">{"Buy now" if live else "View on HMT"} &rarr;</a>'
+            "</article>")
+    # The headline answers the question you opened the page to ask, not the count.
+    n = len(plates)
+    live = sum(1 for k, s in state.items() if k != "_meta" and s.get("status") == "in_stock")
+    verdict = (f"{live} in stock now" if live else
+               "Both out of stock" if n == 2 else f"All {n} out of stock" if n else "Nothing tracked yet")
+    html = (ROOT / "page_template.html").read_text(encoding="utf-8")
     (ROOT / "docs").mkdir(exist_ok=True)
+    (ROOT / "docs" / ".nojekyll").write_text("")
     (ROOT / "docs" / "index.html").write_text(
-        '<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">'
-        "<title>HMT watch</title><style>body{font:16px system-ui;margin:0;padding:1.5rem;background:#111;color:#eee}"
-        "table{width:100%;border-collapse:collapse}td{padding:.6rem .3rem;border-bottom:1px solid #333}"
-        ".in_stock{color:#4ade80;font-weight:700}a{color:#7dd3fc}</style>"
-        f"<h2>HMT watch</h2><table>{rows}</table>"
-        f'<p style="color:#888">updated {datetime.now(IST):%d %b %Y, %H:%M} IST</p>', encoding="utf-8")
+        html.replace("__ROWS__", "\n".join(plates))
+            .replace("__VERDICT__", verdict)
+            .replace("__UPDATED__", f"{datetime.now(IST):%d %b, %H:%M}"), encoding="utf-8")
 
 
 def main() -> None:
