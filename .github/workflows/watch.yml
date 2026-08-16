@@ -1,9 +1,13 @@
 name: watch
 
+# The Cloudflare Worker (cloudflare/worker.js) is now the live monitor -- its
+# cron genuinely fires every minute, where this one drifted 5-20 min and took
+# 22 minutes to start at all. The schedule here is disabled so a restock does
+# not produce two alerts from two systems.
+#
+# This still runs on demand and is a working fallback: re-add a `schedule:`
+# block here if Cloudflare is ever unavailable.
 on:
-  schedule:
-    - cron: '*/5 * * * *'    # hot: the 2 watches Prajwal wants
-    - cron: '7,37 * * * *'   # sweep: every Janata + Gandaberunda variant
   workflow_dispatch:
     inputs:
       tier:

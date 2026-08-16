@@ -179,43 +179,6 @@ def discover() -> list:
     return found
 
 
-def ago(ts: float) -> str:
-    m = int((time.time() - ts) / 60)
-    return "just now" if m < 1 else f"{m} min ago" if m < 90 else f"{m // 60} h ago"
-
-
-def dashboard(state: dict) -> None:
-    """Render docs/index.html from page_template.html."""
-    plates = []
-    for k, s in sorted(state.items(), key=lambda x: (x[1].get("status") != "in_stock", x[1].get("name", ""))):
-        if k == "_meta":
-            continue
-        live = s.get("status") == "in_stock"
-        cls, label = ("in", "In stock") if live else (("down", "Check failed") if s.get("fails") else ("out", "Out of stock"))
-        kn = '<div class="kn">ಗಂಡಭೇರುಂಡ</div>' if "gandaberunda" in (s.get("name") or "").lower() else ""
-        plates.append(
-            f'<article class="plate{" instock" if live else ""}">'
-            f'<div class="ref">Ref. {k[:8]}</div>'
-            f'<h2 class="name">{s.get("name", "Unknown")}</h2>{kn}'
-            f'<div class="state {cls}"><b></b>{label}</div>'
-            f'<div class="price">₹{s.get("mrp", 0):,}</div>'
-            f'<div class="meta"><span data-checked="{s.get("checked", 0)}">Checked {ago(s.get("checked", 0))}</span></div>'
-            f'<a class="buy" href="{PRODUCT_URL.format(k)}">{"Buy now" if live else "View on HMT"} &rarr;</a>'
-            "</article>")
-    # The headline answers the question you opened the page to ask, not the count.
-    n = len(plates)
-    live = sum(1 for k, s in state.items() if k != "_meta" and s.get("status") == "in_stock")
-    verdict = (f"{live} in stock now" if live else
-               "Both out of stock" if n == 2 else f"All {n} out of stock" if n else "Nothing tracked yet")
-    html = (ROOT / "page_template.html").read_text(encoding="utf-8")
-    (ROOT / "docs").mkdir(exist_ok=True)
-    (ROOT / "docs" / ".nojekyll").write_text("")
-    (ROOT / "docs" / "index.html").write_text(
-        html.replace("__ROWS__", "\n".join(plates))
-            .replace("__VERDICT__", verdict)
-            .replace("__UPDATED__", f"{datetime.now(IST):%d %b, %H:%M}"), encoding="utf-8")
-
-
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--tier", choices=["hot", "all"], default="hot")
@@ -242,7 +205,6 @@ def main() -> None:
     if not a.dry_run:
         heartbeat(items, state)
         STATE.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n")
-        dashboard(state)
 
 
 if __name__ == "__main__":

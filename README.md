@@ -1,8 +1,10 @@
 # HMT restock monitor
 
 Watches [hmtwatches.store](https://www.hmtwatches.store) and pushes a phone notification
-the moment a watch comes back in stock. Runs free on GitHub Actions — no server, and it
-works whether your laptop is on, asleep, or in a bag.
+the moment a watch comes back in stock. Runs free on a Cloudflare Worker — no server, and
+it works whether your laptop is on, asleep, or in a bag.
+
+**Live status: https://hmt-watch.prajwalanagani.workers.dev**
 
 Tracking: **HMT Janata Automatic White** (₹14,750) and **HMT Men's Gandaberunda JGSL 01**
 (₹2,499), plus every other Janata Automatic / Gandaberunda variant found weekly.
@@ -22,14 +24,19 @@ alerts print to stdout instead of being sent.
 
 ## Schedule
 
-| Job | When | What |
-|---|---|---|
-| `watch` hot | every 5 min | the 2 wanted watches |
-| `watch` sweep | :07 and :37 | all Janata + Gandaberunda variants |
-| `discover` | weekly | re-crawl sitemap for new listings |
+| Job | Where | When | What |
+|---|---|---|---|
+| check | Cloudflare Worker | **every minute** | the 2 wanted watches |
+| sweep | Cloudflare Worker | :07 and :37 | all Janata + Gandaberunda variants |
+| `discover` | GitHub Actions | weekly | re-crawl sitemap, update `products.json` |
 
-Free-tier GitHub cron is best-effort and can drift 5–20 min under load. These watches sit
-out of stock for weeks, so that's fine. For sub-minute precision, run `watch.py` on a VPS.
+The Worker reads `products.json` straight from this repo, so the weekly discovery job on
+GitHub feeds the live monitor without any coupling between them.
+
+**Why not GitHub Actions for the checks?** It was the original design, and its cron proved
+best-effort: it took 22 minutes to fire at all on a new repo, then drifted 5–20 minutes.
+Cloudflare's cron actually fires every minute. `watch.yml` is kept as a manual fallback —
+re-add a `schedule:` block if Cloudflare is ever unavailable.
 
 ## Three traps this parser exists to avoid
 

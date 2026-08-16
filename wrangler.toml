@@ -1,6 +1,7 @@
 name = "hmt-watch"
 main = "cloudflare/worker.js"
 compatibility_date = "2026-08-16"
+workers_dev = true
 
 # Lets the Worker import page_template.html as a string, so the status page has
 # exactly one source of truth shared with the Python renderer.
@@ -13,7 +14,7 @@ crons = ["* * * * *"]
 
 [[kv_namespaces]]
 binding = "STATE"
-id = "PLACEHOLDER"
+id = "3fc4c25873c4455bb5eef0e83a1a2e8c"
 
 [observability]
 enabled = true
