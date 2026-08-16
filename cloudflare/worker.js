@@ -174,6 +174,24 @@ export default {
   },
 
   async fetch(request, env) {
+    // /test-alert?key=<ntfy topic> proves the Worker's own alert path works.
+    // Worth having permanently: this monitor's job is to break silence, so the
+    // ability to confirm it can still shout is not a debug convenience.
+    // Guarded by the topic itself, which is already the shared secret.
+    const url = new URL(request.url);
+    if (url.pathname === "/test-alert") {
+      if (url.searchParams.get("key") !== env.NTFY_TOPIC)
+        return new Response("nope", { status: 403 });
+      await notify(env, {
+        title: "Worker alert test",
+        body: "The Cloudflare monitor can reach your phone.",
+        url: "https://hmt-watch.prajwalanagani.workers.dev",
+        priority: "high",
+        tags: "white_check_mark",
+      });
+      return new Response("sent\n");
+    }
+
     const state = JSON.parse((await env.STATE.get("state")) || "{}");
     const { render } = await import("./page.js");
     return new Response(render(state), {
