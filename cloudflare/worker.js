@@ -18,6 +18,17 @@ const PRODUCTS_JSON =
 const RENUDGE = 30 * 60 * 1000; // keep nudging every 30 min while in stock
 const SWEEP_EVERY = 30; // minutes between full-variant sweeps
 const FAIL_ALERT_AFTER = 3;
+// 10 min => ~144 writes/day, comfortably inside the 1000/day KV free tier.
+const WRITE_EVERY = 10 * 60 * 1000;
+
+/** Everything worth persisting for, excluding per-run timestamps. */
+export const signature = (state) =>
+  JSON.stringify(
+    Object.entries(state)
+      .filter(([k]) => k !== "_meta")
+      .map(([k, v]) => [k, v.status, v.name, v.mrp, v.fails])
+      .sort()
+  );
 
 class ParseError extends Error {}
 
@@ -155,12 +166,16 @@ export async function check(env, sweep) {
     st.checked = Date.now();
   }
 
-  // KV free tier allows 1000 writes/day; a write every minute would exceed it.
-  // Status rarely changes, but `checked` does -- so write at most every 5 min
-  // unless something meaningful changed.
+  // KV free tier allows 1000 writes/day and the cron runs 1440 times, so a
+  // write per run does not fit. Only two things justify a write:
+  //   1. something meaningful changed (stock status, name, price, fail count)
+  //   2. the page's "checked" timestamp has gone stale enough to look broken
+  // `checked` is deliberately EXCLUDED from the signature -- it ticks every run,
+  // so including it makes "changed" permanently true and defeats the throttle.
+  // Alerts never depend on this: they fire on transition, before any write.
   const meta = (state._meta ??= {});
-  const changed = JSON.stringify({ ...state, _meta: null }) !== JSON.stringify({ ...JSON.parse(before || "{}"), _meta: null });
-  if (changed || Date.now() - (meta.written || 0) > 5 * 60 * 1000) {
+  if (signature(state) !== signature(JSON.parse(before || "{}")) ||
+      Date.now() - (meta.written || 0) > WRITE_EVERY) {
     meta.written = Date.now();
     await env.STATE.put("state", JSON.stringify(state));
   }

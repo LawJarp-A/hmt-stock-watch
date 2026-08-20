@@ -57,3 +57,17 @@ test("disagreeing signals raise rather than answer", () => {
   );
   assert.throws(() => parseStock(html, PACE_IN));
 });
+
+// This throttle failed once in production: the old check diffed the WHOLE state,
+// including each watch's `checked` timestamp, which ticks every run. That made
+// "changed" permanently true, so it wrote on all 1440 cron runs against a
+// 1000/day KV free-tier limit. Cloudflare emailed the warning before it broke.
+test("write signature ignores per-run timestamps", async () => {
+  const { signature } = await import("./worker.js");
+  const a = { x: { status: "out_of_stock", name: "W", mrp: 100, fails: 0, checked: 1 } };
+  const b = { x: { status: "out_of_stock", name: "W", mrp: 100, fails: 0, checked: 999999 } };
+  assert.equal(signature(a), signature(b), "a new checked time alone must not force a KV write");
+
+  const c = { x: { status: "in_stock", name: "W", mrp: 100, fails: 0, checked: 1 } };
+  assert.notEqual(signature(a), signature(c), "a real status change must force a write");
+});
